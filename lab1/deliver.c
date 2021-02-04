@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+// Sample code retrieved from Beej's Guide to Network Programming
+
 
 int main(int argc, const char *argv[]) {
 
