@@ -56,7 +56,7 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
   char firstInput[100], fileName[100];
   //scanf("%s %s", firstInput, fileName);
   fgets(firstInput,100,stdin);
-  fgets(filename,100,stdin);
+  fgets(fileName,100,stdin);
   printf("firstInput: %s, fileName: %s", firstInput,fileName);
 
   if(strcmp(firstInput,"ftp") != 0 ) {
