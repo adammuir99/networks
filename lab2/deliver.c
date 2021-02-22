@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 // Sample code retrieved from Beej's Guide to Network Programming
 
@@ -54,10 +55,10 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
 // Ask for user input
   printf("Please input: ftp <file name>\n");
   char firstInput[100], fileName[100];
-  //scanf("%s %s", firstInput, fileName);
-  fgets(firstInput,100,stdin);
-  fgets(fileName,100,stdin);
-  printf("firstInput: %s, fileName: %s", firstInput,fileName);
+  scanf("%s %s", firstInput, fileName);
+  //fgets(firstInput,100,stdin);
+  //fgets(fileName,100,stdin);
+  printf("firstInput: %s, fileName: %s\n", firstInput,fileName);
 
   if(strcmp(firstInput,"ftp") != 0 ) {
     printf("Program terminating because of invalid input!\n");
@@ -75,6 +76,11 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
   int messageLength = strlen(message);
   sendto(sockfd,message,messageLength, 0, servinfo->ai_addr, servinfo->ai_addrlen);
 
+  // Measure the RTT
+  clock_t start, end;
+  start = clock();    // Message has been sent, start the timer
+
+
   // Receive Message
   struct sockaddr_storage from_addr;
   int numBytesReceived;
@@ -83,6 +89,8 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
   memset(&response, 0, sizeof response);
   // maximum length of buffer is 99  because (100-1), the last spot is reserved for null terminating character
   numBytesReceived = recvfrom(sockfd,response,99,0,(struct sockaddr *)&from_addr, from_length ); 
+
+  end = clock();    // Response has been recieved, stop the timer
 
   //printf("BEFORE: %s\n", response);
   // Add null terminating character to end of response string received
@@ -98,6 +106,8 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
         printf("Response: %s\n", response);
         exit(1);
     }
+
+    printf("The RTT is: %f seconds\n", (float)(end - start) / CLOCKS_PER_SEC);
 
 
     freeaddrinfo(servinfo);  // free the linked list servinfo
