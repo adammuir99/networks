@@ -80,14 +80,14 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
   // Send Message
   char* message = "ftp";
   int messageLength = strlen(message);
-  sendto(sockfd,message,messageLength, 0, servinfo->ai_addr, servinfo->ai_addrlen);
 
   // Measure the RTT
   clock_t start, end;
   start = clock();    // Message has been sent, start the timer
 
+  sendto(sockfd,message,messageLength, 0, servinfo->ai_addr, servinfo->ai_addrlen);
 
-  // Receive Message
+    // Receive Message
   struct sockaddr_storage from_addr;
   int numBytesReceived;
   char response[MAXBUFLEN];
@@ -124,7 +124,7 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
 
     // Send the packet
     sendto(sockfd, packet_msg, MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen);
-    printf("Package %d sent.", packet_ptr->frag_no);
+    printf("Package %d sent.\n", packet_ptr->frag_no);
 
     // Get Response
     memset(&response, 0, sizeof response);
