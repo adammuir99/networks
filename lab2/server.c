@@ -110,8 +110,9 @@ int main(int argc, char ** argv)
 
 
 	FILE* fp;
+	bool keepLooping = true;
 
-	while(1) {
+	while(keepLooping) {
 
 		numbytes = recvfrom(sockfd,buf,MAXBUFLEN-1 , 0,(struct sockaddr *)&their_addr, &addr_len);
 
@@ -124,25 +125,26 @@ int main(int argc, char ** argv)
 
 		struct packet * newPacket = stringToPacket(buf); // conver the string received to a struct packet
 		char* fileName = newPacket->filename;
+		int fragmentNumber = newPacket->frag_no; 
+		int dataSize = newPacket->size;
+		int numOfFragments = newPacket->total_frag;
 		char* data = newPacket->filedata;
 
 		printf("Packet has been received!\n");
 
-		if(newPacket->frag_no == 1) {
+		if(fragmentNumber == 1) {
 			fp = fopen(fileName,"wb"); // opens file stream with write to mode, 'b' is for binary
 		} 
 
-		fwrite(data,1,newPacket->size,fp); // write to file stream fp with the elements from "data"
+		fwrite(data,1,dataSize,fp); // write to file stream fp with the elements from "data"
 
-		
+		if(fragmentNumber == numOfFragments) {
+			keepLooping = false; // end of linked list, stop looping
+		}
 		
 		sendto(sockfd, (char*)"ACK", strlen((char*)"ACK"), 0, (struct sockaddr *)&their_addr, addr_len); // Send ACK
 
 		free(newPacket); // free the memory allocated
-
-		if(newPacket->frag_no == newPacket->total_frag) {
-			break; // end of linked list, stop looping
-		}
 
 	} // while
 	
