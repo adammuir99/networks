@@ -21,7 +21,7 @@ struct packet {
 // given the file name, process the file into segments and create a linked list of packets
 struct packet createPackets(char* fileName){
 
-	struct packet* firstPacket, previousPacket;
+	struct packet * firstPacket, previousPacket;
 	
 	// open file, and read-only (b is for binary files as well)
 	FILE* fp = fopen(fileName, "rb"); 
@@ -35,7 +35,30 @@ struct packet createPackets(char* fileName){
 
 	// create linked list of packets
 
+	for (fragmentNumber = 1; fragmentNumber <= numOfFragments; fragmentNumber ++) {
+
+		struct packet * newPacket = (struct packet *)malloc(sizeof(struct packet));
+
+		if(newPacket == NULL) {
+
+			printf("Unable to allocate memory for storing packet information. Exiting!");
+			exit(1);
+		}
+
+		if(fragmentNumber == 1) {	// if fragment number is 1, it is the start of the linked list
+			firstPacket = newPacket;
+			firstPacket->nextPacket = NULL;	// assign the next packet as Null for now
+		}
+
+		
+
+		
 	
+		
+
+
+	} // for loop
+
 
 
 
