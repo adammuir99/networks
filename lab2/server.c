@@ -22,6 +22,8 @@
 
 #define MAXBUFLEN 1200	//Maximum length of the message recieved
 
+struct packet* stringToPacket (char* str);
+
 // get sockaddr, IPv4 or IPv6 (function taken from Beej's):
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -112,6 +114,24 @@ int main(int argc, char ** argv)
 struct packet* stringToPacket (char* str){
 	struct packet* packet_ptr;
 
-	char* str_total_frag, str_frag_no, str_size, str_filename;
+	char* str_total_frag, *str_frag_no, *str_size, *str_filename;
+
+	// Retrieving substring until a certain char from https://stackoverflow.com/questions/45832469/get-the-beginning-of-a-string-until-a-given-char
+	str_total_frag = strtok(str, ":"); // Get the first token
+	str_frag_no = strtok(NULL, ":");
+	str_size = strtok(NULL, ":");
+	str_filename = strtok(NULL, ":");
+
+	struct packet* new_packet = malloc(sizeof(struct packet));
+	new_packet->total_frag = atoi(str_total_frag);
+	new_packet->frag_no = atoi(str_frag_no);
+	new_packet->size = atoi(str_size);
+	new_packet->filename = str_filename;
+
+	int header_len = strlen(str_total_frag) + strlen(str_frag_no) + strlen(str_size) + strlen(str_filename) + 4;
+
+	memcpy(new_packet->filedata, &str[header_len], new_packet->size);
+
+	return new_packet;
 
 }
