@@ -3,6 +3,8 @@
 #ifndef headerFile
 #define headerFile
 
+#include <math.h>
+
 #define maxFragmentLen 1000
 
 
@@ -19,7 +21,7 @@ struct packet {
 };
 
 // given the file name, process the file into segments and create a linked list of packets
-struct packet createPackets(char* fileName){
+struct packet * createPackets(char* fileName){
 
 	struct packet * firstPacket, previousPacket;
 	
@@ -31,7 +33,7 @@ struct packet createPackets(char* fileName){
 	int fileSize = ftell(fp);
 	fseek(fp,0, SEEK_SET);
 
-	numOfFragments = (fileSize / maxFragmentLen) + 1;
+	 int numOfFragments = ceil(fileSize / maxFragmentLen);
 
 	// create linked list of packets
 

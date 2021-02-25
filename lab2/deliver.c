@@ -9,8 +9,11 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include "packet.h"
 
 // Sample code retrieved from Beej's Guide to Network Programming
+
+#define MAXBUFLEN 1200	//Maximum length of the message recieved
 
 
 int main(int argc, const char *argv[]) {
@@ -70,7 +73,7 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
     printf("Program terminating because file cannot be found!\n");
     exit(1);
   }
-
+  
   // Send Message
   char* message = "ftp";
   int messageLength = strlen(message);
@@ -88,7 +91,7 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
   socklen_t from_length = sizeof(struct sockaddr_storage);
   memset(&response, 0, sizeof response);
   // maximum length of buffer is 99  because (100-1), the last spot is reserved for null terminating character
-  numBytesReceived = recvfrom(sockfd,response,99,0,(struct sockaddr *)&from_addr, from_length ); 
+  numBytesReceived = recvfrom(sockfd,response,99,0,(struct sockaddr *)&from_addr, &from_length ); 
 
   end = clock();    // Response has been recieved, stop the timer
 
@@ -107,7 +110,14 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
         exit(1);
     }
 
-    printf("The RTT is: %f seconds\n", (float)(end - start) / CLOCKS_PER_SEC);
+  printf("The RTT is: %f seconds\n", (float)(end - start) / CLOCKS_PER_SEC);
+
+  // 
+  struct packet* packet_ptr = createPackets(fileName);
+
+  while (packet_ptr != NULL) {
+
+  }
 
 
     freeaddrinfo(servinfo);  // free the linked list servinfo
@@ -119,3 +129,16 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
 
 
 } // main
+
+char* packetToString (struct packet* p){
+  char* str;
+  // Set str as 0
+  memset(str, 0, MAXBUFLEN);
+
+  // Create the header
+  int header = sprintf(str, "%d:%d:%d:%s:", p->total_frag, p->frag_no, p->size, p->filename);
+
+  memcpy(str + header, p->filedata, p->size);
+
+  return str;
+}
