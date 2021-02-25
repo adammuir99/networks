@@ -17,6 +17,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include "packet.h"
 
 
 #define MAXBUFLEN 1200	//Maximum length of the message recieved
@@ -101,7 +102,16 @@ int main(int argc, char ** argv)
         sendto(sockfd, (char*)"no", strlen((char*)"no"), 0, (struct sockaddr *)&their_addr, addr_len);		//Respond no
     }
 
+
+
 	close(sockfd);
 
 	return 0;
+}
+
+struct packet* stringToPacket (char* str){
+	struct packet* packet_ptr;
+
+	char* str_total_frag, str_frag_no, str_size, str_filename;
+
 }
