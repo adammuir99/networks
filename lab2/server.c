@@ -132,7 +132,7 @@ int main(int argc, char ** argv)
 		printf("Packet has been received!\n");
 
 		if(fragmentNumber == 1) {
-			fp = fopen(fileName,"wb"); // opens  fil estream with write to mode, 'b' is for binary
+			fp = fopen(fileName,"wb"); // opens file stream with write to mode, 'b' is for binary
 		} 
 
 		fwrite(data,1,dataSize,fp); // write to file stream fp with the elements from "data"
