@@ -19,7 +19,7 @@
 #include <netdb.h>
 
 
-#define MAXBUFLEN 100	//Maximum length of the message recieved
+#define MAXBUFLEN 1200	//Maximum length of the message recieved
 
 // get sockaddr, IPv4 or IPv6 (function taken from Beej's):
 void *get_in_addr(struct sockaddr *sa)
