@@ -142,19 +142,16 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
           continue;
       }
 
-    free(packet_msg);  
+    struct packet* deallocate_ptr = packet_ptr;   // Point to the current packet
     packet_ptr = packet_ptr->nextPacket;
+    // Free the packet that was just sent
+    free(deallocate_ptr);
+    free(packet_msg);  
   }
-
 
     freeaddrinfo(servinfo);  // free the linked list servinfo
     close(sockfd); // close socket descriptor
     return 0;
-
-
-
-
-
 } // main
 
 char* packetToString (struct packet* p){
