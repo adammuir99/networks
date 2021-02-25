@@ -103,6 +103,49 @@ int main(int argc, char ** argv)
     }
 
 
+//////////////// Receive Packets //////////////////////
+
+
+	FILE* fp;
+	bool keepLooping = true;
+
+	while(keepLooping) {
+
+		numbytes = recvfrom(sockfd,buf,MAXBUFLEN-1 , 0,(struct sockaddr *)&their_addr, &addr_len);
+
+		if(numbytes == -1) {
+			perror("recvfrom"):
+			exit(1);
+		}
+
+		buf[numbytes] = '\0';
+
+		struct packet * newPacket = stringToPacket(buf); // conver the string received to a struct packet
+		char* fileName = newPacket->filename;
+		int fragmentNumber = newPacket->frag_no; 
+		int dataSize = newPacket->size;
+		int numOfFragments = newPacket->total_frag;
+		char* data = newPacket->filedata;
+
+		printf("Packet has been received!\n");
+
+		if(fragmentNumber == 1) {
+			fp = fopen(fileName,"wb"); // opens  fil estream with write to mode, 'b' is for binary
+		} 
+
+		fwrite(data,1,dataSize,fp); // write to file stream fp with the elements from "data"
+
+		if(fragmentNumber == numOfFragments) {
+			keepLooping = false; // end of linked list, stop looping
+		}
+		
+		sendto(sockfd, (char*)"ACK", strlen((char*)"ACK"), 0, (struct sockaddr *)&their_addr, addr_len); // Send ACK
+
+		free(newPacket); // free the memory allocated
+
+	} // while
+	
+	fclose(fp); // close the file stream
 
 	close(sockfd);
 
