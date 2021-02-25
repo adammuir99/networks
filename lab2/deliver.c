@@ -15,6 +15,9 @@
 
 #define MAXBUFLEN 1200	//Maximum length of the message recieved
 
+//Function Prototyping
+char* packetToString (struct packet* p);
+
 
 int main(int argc, const char *argv[]) {
 
@@ -87,7 +90,7 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
   // Receive Message
   struct sockaddr_storage from_addr;
   int numBytesReceived;
-  char response[100];
+  char response[MAXBUFLEN];
   socklen_t from_length = sizeof(struct sockaddr_storage);
   memset(&response, 0, sizeof response);
   // maximum length of buffer is 99  because (100-1), the last spot is reserved for null terminating character
@@ -112,11 +115,35 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
 
   printf("The RTT is: %f seconds\n", (float)(end - start) / CLOCKS_PER_SEC);
 
-  // 
+  // Sending the packet
   struct packet* packet_ptr = createPackets(fileName);
 
   while (packet_ptr != NULL) {
+    // Convert the packet into a string
+    char* packet_msg = packetToString(packet_ptr);
 
+    // Send the packet
+    sendto(sockfd, packet_msg, MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen);
+    printf("Package %d sent.", packet_ptr->frag_no);
+
+    // Get Response
+    memset(&response, 0, sizeof response);
+    numBytesReceived = recvfrom(sockfd, response, MAXBUFLEN-1, 0, (struct sockaddr *)&from_addr, &from_length);
+    response[numBytesReceived] = '\0';
+
+    // Check what the received message is
+    if(strcmp(response, "ACK") == 0 ){
+          printf("ACK\n");
+      }
+      else{
+          printf("Reponse isn't 'ACK'!\n");
+          printf("Response: %s\n", response);
+          printf("Re-sending package.\n");
+          continue;
+      }
+
+    free(packet_msg);  
+    packet_ptr = packet_ptr->nextPacket;
   }
 
 
@@ -131,13 +158,16 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
 } // main
 
 char* packetToString (struct packet* p){
-  char* str;
+  // Allocate the memory for str
+  char* str = malloc(MAXBUFLEN);
+
   // Set str as 0
   memset(str, 0, MAXBUFLEN);
 
   // Create the header
   int header = sprintf(str, "%d:%d:%d:%s:", p->total_frag, p->frag_no, p->size, p->filename);
 
+  // Copy the file data into the string
   memcpy(str + header, p->filedata, p->size);
 
   return str;
