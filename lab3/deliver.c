@@ -14,6 +14,7 @@
 // Sample code retrieved from Beej's Guide to Network Programming
 
 #define MAXBUFLEN 1200	//Maximum length of the message recieved
+#define NUM_OF_RESEND 5 // Number of times a packet will be re-sent after a timeout
 
 //Function Prototyping
 char* packetToString (struct packet* p);
@@ -115,10 +116,24 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
 
   printf("The RTT is: %f seconds\n", (float)(end - start) / CLOCKS_PER_SEC);
 
+  //Set the timeout options (from https://stackoverflow.com/questions/4181784/how-to-set-socket-timeout-in-c-when-making-multiple-connections)
+  struct timeval timeout;
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+
+  if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0){
+    printf("setsockopt error\n");
+    exit(1);
+  }
+
   // Sending the packet
   struct packet* packet_ptr = createPackets(fileName);
+  int resend = 0; // Flag for resending the packet (1 for resend)
+  int resend_counter = 0; // Number of times the current packet has been re-sent
 
   while (packet_ptr != NULL) {
+    resend = 0;
+
     // Convert the packet into a string
     char* packet_msg = packetToString(packet_ptr);
 
@@ -128,25 +143,37 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
 
     // Get Response
     memset(&response, 0, sizeof response);
-    numBytesReceived = recvfrom(sockfd, response, MAXBUFLEN-1, 0, (struct sockaddr *)&from_addr, &from_length);
-    response[numBytesReceived] = '\0';
-
-    // Check what the received message is
-    if(strcmp(response, "ACK") == 0 ){
-          printf("ACK\n");
+    if (numBytesReceived = recvfrom(sockfd, response, MAXBUFLEN-1, 0, (struct sockaddr *)&from_addr, &from_length) == -1){
+      if (resend_counter <= NUM_OF_RESEND){
+        resend = 1;
+      } else {
+        printf("Maximum number of resends reached, terminating\n");
+        exit(1);
       }
-      else{
-          printf("Reponse isn't 'ACK'!\n");
-          printf("Response: %s\n", response);
-          printf("Re-sending package.\n");
-          continue;
-      }
+      resend_counter++;
+      printf("Did not recieve a response, resending: %d\n", resend_counter);
+    } else {  // Response was recieved
+      response[numBytesReceived] = '\0';
 
-    struct packet* deallocate_ptr = packet_ptr;   // Point to the current packet
-    packet_ptr = packet_ptr->nextPacket;
-    // Free the packet that was just sent
-    free(deallocate_ptr);
+      // Check what the received message is
+      if(strcmp(response, "ACK") == 0 ){
+        printf("ACK\n");
+      }
+    }
+    
+
+    // Only deallocate the packet if we are not resending it
+    // Point to the next packet if we are not resending
+    if (resend == 0){
+      struct packet* deallocate_ptr = packet_ptr;   // Point to the current packet
+      packet_ptr = packet_ptr->nextPacket;
+      // Free the packet that was just sent
+      free(deallocate_ptr);
+      resend_counter = 0; // Reset to 0 for the next packet
+    }
+    
     free(packet_msg);  
+
   }
 
     freeaddrinfo(servinfo);  // free the linked list servinfo
