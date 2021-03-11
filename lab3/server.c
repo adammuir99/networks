@@ -139,6 +139,9 @@ int main(int argc, char ** argv)
 			keepLooping = false;
 		}
 		
+		if (newPacket->frag_no == 15000){
+			sleep(2);
+		}
 		sendto(sockfd, (char*)"ACK", strlen((char*)"ACK"), 0, (struct sockaddr *)&their_addr, addr_len); // Send ACK
 
 		free(newPacket); // free the memory allocated

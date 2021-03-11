@@ -114,14 +114,20 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
         exit(1);
     }
 
-  printf("The RTT is: %f seconds\n", (float)(end - start) / CLOCKS_PER_SEC);
+  float sampleRTT = (float)(end - start) / CLOCKS_PER_SEC;
+  float devRTT = sampleRTT / 2;
+  float timeout = sampleRTT + 4 * devRTT;
+  float estimatedRTT = 0.0;
+
+  printf("The RTT is: %f seconds\n", sampleRTT);
+  printf("The timeout is: %f seconds\n", timeout);
 
   //Set the timeout options (from https://stackoverflow.com/questions/4181784/how-to-set-socket-timeout-in-c-when-making-multiple-connections)
-  struct timeval timeout;
-  timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
+  struct timeval time;
+  time.tv_sec = 0;
+  time.tv_usec = timeout * 1000000;
 
-  if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0){
+  if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(time)) < 0){
     printf("setsockopt error\n");
     exit(1);
   }
@@ -134,17 +140,28 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
   while (packet_ptr != NULL) {
     resend = 0;
 
+    //Set the timeout options (from https://stackoverflow.com/questions/4181784/how-to-set-socket-timeout-in-c-when-making-multiple-connections)
+    struct timeval time;
+    time.tv_sec = 0;
+    time.tv_usec = timeout * 1000000;
+
+    if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&time, sizeof(time)) < 0){
+      printf("setsockopt error\n");
+      exit(1);
+    }
+
     // Convert the packet into a string
     char* packet_msg = packetToString(packet_ptr);
 
     // Send the packet
+    start = clock();    // Message has been sent, start the timer
     sendto(sockfd, packet_msg, MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen);
     printf("Package %d sent.\n", packet_ptr->frag_no);
 
     // Get Response
     memset(&response, 0, sizeof response);
     if (numBytesReceived = recvfrom(sockfd, response, MAXBUFLEN-1, 0, (struct sockaddr *)&from_addr, &from_length) == -1){
-      if (resend_counter <= NUM_OF_RESEND){
+      if (resend_counter < NUM_OF_RESEND){
         resend = 1;
       } else {
         printf("Maximum number of resends reached, terminating\n");
@@ -160,11 +177,21 @@ if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //argv[1] is
         printf("ACK\n");
       }
     }
+    end = clock();    // Response has been recieved, stop the timer
+
     
 
     // Only deallocate the packet if we are not resending it
     // Point to the next packet if we are not resending
     if (resend == 0){
+      //Timeout settings
+      sampleRTT = (float)(end - start) / CLOCKS_PER_SEC;
+      estimatedRTT = (1 - 0.125) * estimatedRTT + 0.125 * sampleRTT;
+      devRTT = (1 - 0.25) * devRTT + 0.25 * abs(sampleRTT - estimatedRTT);
+      timeout = estimatedRTT + 4 * devRTT;
+
+      printf("The timeout is: %f seconds\n", timeout);
+      
       struct packet* deallocate_ptr = packet_ptr;   // Point to the current packet
       packet_ptr = packet_ptr->nextPacket;
       // Free the packet that was just sent
