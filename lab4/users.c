@@ -67,7 +67,7 @@ int auth_user(int sockfd) {
           response(sockfd, LO_ACK, "");
           users[i].active = 1;
           users[i].sockfd = sockfd;
-          printf("User %s connected to server\n", m.source);
+          printf("User %s connect to server\n", m.source);
           return 1; // return true
         }
       }
@@ -91,6 +91,8 @@ int logout_user(struct user* user) {
   close(user->sockfd);
   user->sockfd = -1;
   user->cur_session = NULL;
+  // TODO reset_max_sock
+  // Might not need since it's done for each loop
   printf("Successfully logged out %s\n", user->name);
   return 0;
 }

@@ -23,7 +23,7 @@ int client_sock = -1; // current socket
 
 #define LOGIN_CHECK                                             \
   if(!isloggedin())                                             \
-    { printf("You must log in to perform commands\n"); }      \
+    { printf("Not yet logged in; Please login first\n"); }      \
   else
 
 int menu() {
@@ -124,7 +124,7 @@ int login(const char* name, const char* pass, const char* server_ip, const char*
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
   if ((rv = getaddrinfo(server_ip, server_port, &hints, &servinfo)) != 0) {
-    printf("Bad server IP or port");
+    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
     return 1;
   }
   // loop through all the results and connect to the first we can
@@ -254,7 +254,7 @@ int quit() {
     printf("failed to quit\n");
     return err;
   }
-  printf("\nQuiting\n");
+  printf("\nQuiting Text Conferencing Pro v1.0\n");
   exit(0);
 }
 
