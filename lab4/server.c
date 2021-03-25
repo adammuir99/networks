@@ -77,11 +77,6 @@ int main(int argc, char const * argv[]) {
       }
     }
 
-    // always handle max sockfd first
-    if (select(max_sockfd + 1, &server_fds, NULL, NULL, NULL) < 0){
-      perror("error: select");
-    }
-
     if (FD_ISSET(main_sockfd, &server_fds)) {
       // Login request
       struct sockaddr new_addr;
