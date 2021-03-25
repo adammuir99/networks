@@ -64,20 +64,9 @@ int menu() {
       scanf(" %s", session_id);
       err = create_session(session_id);
     }
-  } else if (strcmp(command, "/switchsession") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", session_id);
-      err = switch_session(session_id);
-    }
   } else if (strcmp(command, "/list") == 0) {
     LOGIN_CHECK{
       err = list();
-    }
-  } else if (strcmp(command, "/invite") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", username);
-      scanf(" %s", session_id);
-      err = invite(username, session_id);
     }
   } else if (strcmp(command, "/quit") == 0) {
     err = quit();
@@ -236,38 +225,6 @@ int create_session(const char* session_id) {
     strncpy(cur_session, session_id, MAX_SESSION_ID);
     is_in_session = 1;
     printf("Successfully created session %s\n", result);
-  }
-  free(result);
-  return err;
-}
-
-int switch_session(const char* session_id) {
-  int err = request(SW_SESS, cur_user->name, session_id, "");
-  if (err) return err;
-  int isack;
-  char* result = NULL;
-  err = recv_ack(SW_ACK, UNKNOWN, &isack, &result);
-  if (!isack) {
-    printf("Failed to switch session %s\n", result);
-  } else {
-    is_in_session = 1;
-    strncpy(cur_session, session_id, MAX_SESSION_ID);
-    printf("Successfully switching to %s\n", session_id);
-  }
-  free(result);
-  return err;
-}
-
-int invite(const char* username, const char* session_id) {
-  int err = request(INVITE, cur_user->name, session_id, username);
-  if (err) return err;
-  int isack;
-  char* result = NULL;
-  err = recv_ack(INVI_ACK, UNKNOWN, &isack, &result);
-  if (err) {
-    printf("Failed to invite %s: %s\n", username, result);
-  } else {
-    printf("%s\n", result);
   }
   free(result);
   return err;

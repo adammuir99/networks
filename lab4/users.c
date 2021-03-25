@@ -15,9 +15,9 @@
 #include "session.h"
 
 struct user users[USER_NUM] = {
-  {.name = "Chenlei", .pass = "chenlei"},
-  {.name = "Alex", .pass = "alex"},
-  {.name = "Hamid", .pass = "hamid"}
+  {.name = "adam", .pass = "muir"},
+  {.name = "sherman", .pass = "lin"},
+  {.name = "username", .pass = "password"}
 };
 
 void _user_join_session(struct user* user, struct session* s) {
@@ -169,42 +169,6 @@ int user_send_msg(struct user* user, struct session* s, const char* msg) {
     return 1;
   }
   return session_send(s, user->name, msg);
-}
-
-int user_switch_session(struct user* user, struct session* s) {
-  assert(user != NULL);
-  if (s == NULL) {
-    response(user->sockfd, UNKNOWN, "Session does not exist");
-    return 1;
-  }
-  if (user->joined_sessions[s->sid] != NULL) {
-    user->cur_session = user->joined_sessions[s->sid];
-    response(user->sockfd, SW_ACK, "");
-    return 0;
-  } else {
-    response(user->sockfd, UNKNOWN, "User has not join the session specified, please join the session first");
-    return 1;
-  }
-}
-
-int invite_user(struct user* inviter, struct user* invitee, struct session* s) {
-  assert(inviter != NULL);
-  if (s == NULL) {
-    response(inviter->sockfd, UNKNOWN, "Session does not exist");
-    return 1;
-  }
-  if (invitee == NULL) {
-    response(inviter->sockfd, UNKNOWN, "The user with specified name does not exist");
-    return 1;
-  }
-  if (!invitee->active) {
-    response(inviter->sockfd, UNKNOWN, "The user with specified name is not online now");
-    return 1;
-  }
-  int err = 0;
-  err = response(inviter->sockfd, INVI_ACK, "Invitation has been sent");
-  err = err || send_through(invitee->sockfd, INVITE, inviter->name, s->session_id, "");
-  return err;
 }
 
 struct user* find_user(const char* username) {

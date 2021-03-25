@@ -12,10 +12,8 @@
 
 #include "message.h"
 
-#define NUM_COL 4
-
 int parse_message(const char* buf, struct message* m) {
-  char* strs[NUM_COL];
+  char* strs[4];
   int start_i = 0;
   int field_count = 0;
   for (size_t i = 0; i < sizeof(struct message); i++) {
@@ -26,10 +24,10 @@ int parse_message(const char* buf, struct message* m) {
       strs[field_count][len] = '\0';
       start_i = i + 1; // the char after ":"
       field_count++;
-      if (field_count == NUM_COL) break; // there should only be 3 colons according to packet structure
+      if (field_count == 4) break; // there should only be 3 colons according to packet structure
     }
   }
-  if (field_count != NUM_COL) { // packet not in the right format
+  if (field_count != 4) { // packet not in the right format
     printf("Mal-formatted packet %s\n", buf);
     return 1;
   }
@@ -46,7 +44,7 @@ int parse_message(const char* buf, struct message* m) {
   printf("%s ", m->session_id);
   printf("%s\n", m->data);
 #endif
-  for (int i = 0; i < NUM_COL; i++)
+  for (int i = 0; i < 4; i++)
     free(strs[i]); // free memory
   return 0;
 }
