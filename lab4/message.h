@@ -31,7 +31,7 @@ struct message {
 #define NEW_SESS 9
 #define NS_ACK 10
 #define MESSAGE 11
-#define QUERY 12
+#define LIST 12
 #define QU_ACK 13
 
 int parse_message(const char* buf, struct message* m);

@@ -132,7 +132,7 @@ int main(int argc, char const * argv[]) {
           case LEAVE_SESS:
             user_leave_session(cur_user, find_session(m.session_id), 1);
             break;
-          case QUERY: {
+          case LIST: {
             char msg[MAX_DATA];
             list_sessions(msg);
             response(cur_user->sockfd, QU_ACK, msg);

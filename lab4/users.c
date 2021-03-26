@@ -91,8 +91,6 @@ int logout_user(struct user* user) {
   close(user->sockfd);
   user->sockfd = -1;
   user->cur_session = NULL;
-  // TODO reset_max_sock
-  // Might not need since it's done for each loop
   printf("Successfully logged out %s\n", user->name);
   return 0;
 }
@@ -104,13 +102,12 @@ int user_join_session(struct user* user, struct session* s) {
     response(user->sockfd, JN_NAK , msg);
     return 1;
   }
-  if (session_is_full(s)) {
+  if (s->user_num == MAX_USERS) {
     sprintf(msg, "%s:session already full %d", s->session_id, MAX_USERS);
     response(user->sockfd, JN_NAK, msg);
     return 1;
   }
   int err = session_add_user(s, user);
-  if (err) return err; // TODO handle other errors
   _user_join_session(user, s);
   response(user->sockfd, JN_ACK, s->session_id);
   snprintf(msg, MAX_DATA, "%s joined session %s", user->name, s->session_id);
@@ -138,7 +135,7 @@ int user_leave_session(struct user* user, struct session* s, int do_ack) {
   // remove user in session
   if (session_remove_user(s, user)) {
     response(user->sockfd, MESSAGE, "500 server error!");
-    return 1; // remove failed(should never happen)
+    return 1;
   }
   // remove session in user
   user->joined_sessions[cur_sid] = NULL;
@@ -146,8 +143,6 @@ int user_leave_session(struct user* user, struct session* s, int do_ack) {
       user->cur_session = NULL;
   }
   if (sessions[cur_sid] != NULL) {
-      // boardcast to users left in current session if the session still exist
-      // after the user quit the session
       session_send(sessions[cur_sid], "Server", buf_all);
   }
   if (do_ack) {

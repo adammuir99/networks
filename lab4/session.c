@@ -29,10 +29,6 @@ int new_session(const char* session_id, struct user* creator) {
   return 1; // Max session reached
 }
 
-int session_is_full(struct session* s) {
-  return s->user_num == MAX_USERS;
-}
-
 struct session* find_session(const char* session_id) {
   for (size_t i = 0; i < MAX_SESSIONS; i++) {
     if (sessions[i] != NULL &&

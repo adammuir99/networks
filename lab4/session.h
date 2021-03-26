@@ -20,7 +20,6 @@ extern fd_set server_fds;
 extern struct session *sessions[MAX_SESSIONS];
 
 int new_session(const char* session_id, struct user* creator);
-int session_is_full(struct session* s);
 struct session* find_session(const char* session_id);
 int session_send(struct session* s, const char* source, const char* msg);
 int session_remove_user(struct session* s, struct user* user);

@@ -1,0 +1,4 @@
+commands.o
+server.o
+session.o
+users.o

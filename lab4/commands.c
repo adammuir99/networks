@@ -203,9 +203,7 @@ int join_session(const char* session_id) {
 }
 
 int leave_session(const char* session_id) {
-  assert(session_id != NULL);
-  int err = request(LEAVE_SESS, cur_user->name, session_id, "");
-  if (err) return err;
+  request(LEAVE_SESS, cur_user->name, session_id, "");
   printf("Leave session %s\n", session_id);
   if (strcmp(cur_session, session_id) == 0) {
     is_in_session = 0;
@@ -214,24 +212,20 @@ int leave_session(const char* session_id) {
 }
 
 int create_session(const char* session_id) {
-  int err = request(NEW_SESS, cur_user->name, session_id, "");
-  if (err) return err;
+  request(NEW_SESS, cur_user->name, session_id, "");
   int isack;
   char* result = NULL;
-  err = recv_ack(NS_ACK, UNKNOWN, &isack, &result);
-  if (err) {
-    printf("Failed to create session\n");
-  } else {
+  if (recv_ack(NS_ACK, UNKNOWN, &isack, &result) != 1) {
     strncpy(cur_session, session_id, MAX_SESSION_ID);
     is_in_session = 1;
-    printf("Successfully created session %s\n", result);
+    printf("Session created %s\n", result);
   }
   free(result);
-  return err;
+  return 0;
 }
 
 int list() {
-  int err = request(QUERY, cur_user->name, "", "");
+  int err = request(LIST, cur_user->name, "", "");
   if (err) return err;
   int isack;
   char* result = NULL;
