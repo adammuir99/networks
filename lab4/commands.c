@@ -21,67 +21,6 @@ int is_in_session = 0;
 char cur_session[MAX_SESSION_ID];
 int clientSockFd = -5; // client socket file descriptor, intialize to -5 (arbitrary) because not aquired yet
 
-#define LOGIN_CHECK                                             \
-  if(!isloggedin())                                             \
-    { printf("Not yet logged in; Please login first\n"); }      \
-  else
-
-int menu() {
-
-  int err = 0;
-  char session_id[MAX_FIELD];
-  char username[MAX_FIELD];
-  char command[MAX_COMMAND_LEN];
-  scanf("%s", command);
-
-  if (strcmp(command, "/login") == 0) {
-    if (!isloggedin()) {
-      char name[MAX_NAME];
-      char pass[MAX_PASS];
-      char server_ip[MAX_FIELD];
-      char server_port[MAX_FIELD];
-      scanf(" %s %s %s %s", name, pass, server_ip, server_port);
-      err = login(name, pass, server_ip, server_port);
-    } else {
-      printf("Already logged in as %s\n", cur_user->name);
-    }
-  } else if (strcmp(command, "/logout") == 0) {
-    LOGIN_CHECK {
-      err = logout();
-    }
-  } else if (strcmp(command, "/joinsession") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", session_id);
-      err = join_session(session_id);
-    }
-  } else if (strcmp(command, "/leavesession") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", session_id);
-      err = leave_session(session_id);
-    }
-  } else if (strcmp(command, "/createsession") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", session_id);
-      err = create_session(session_id);
-    }
-  } else if (strcmp(command, "/list") == 0) {
-    LOGIN_CHECK{
-      err = list();
-    }
-  } else if (strcmp(command, "/quit") == 0) {
-    err = quit();
-  } else {
-    LOGIN_CHECK {
-      // get all text in terminl and send
-      char msg_buf[MAX_DATA];
-      strcpy(msg_buf, command);
-      int offset = strlen(command);
-      fgets(msg_buf + offset, MAX_DATA - offset, stdin);
-      err = send_message(msg_buf);
-    }
-  }
-  return err;
-}
 
 int isloggedin() {
   return cur_user != NULL;
@@ -254,7 +193,7 @@ int quit() {
     printf("failed to quit\n");
     return err;
   }
-  printf("\nQuiting Text Conferencing Pro v1.0\n");
+  printf("\nQuiting\n");
   exit(0);
 }
 

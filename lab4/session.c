@@ -5,23 +5,18 @@
 #include <stdio.h>
 
 fd_set server_fds;
-struct session* sessions[MAX_SESSION];
+struct session* sessions[MAX_SESSIONS];
 
 int new_session(const char* session_id, struct user* creator) {
-  for (size_t i = 0; i < MAX_SESSION; i++) {
+  for (size_t i = 0; i < MAX_SESSIONS; i++) {
     if (sessions[i] == NULL) {
       sessions[i] = malloc(sizeof(struct session));
       (sessions[i])->sid = i;
       (sessions[i])->user_num = 0;
       (sessions[i])->creator = creator;
       bzero(sessions[i]->session_id, MAX_SESSION_ID);
-//      for (size_t j = 0; i < MAX_SESSION_ID; ++j){
-//          sessions[i]->users[j] = NULL;
-//      } // alternative way to initialize users which is not that elegant
-      // Initialize users of each session to NULL(0x0)
       bzero(sessions[i]->users, MAX_SESSION_ID * sizeof(struct user*));
       strncpy(sessions[i]->session_id, session_id, MAX_SESSION_ID);
-      // Add creator to session list
       sessions[i]->users[0] = creator;
       sessions[i]->user_num++;
 
@@ -35,11 +30,11 @@ int new_session(const char* session_id, struct user* creator) {
 }
 
 int session_is_full(struct session* s) {
-  return s->user_num == MAX_USER_SESSION;
+  return s->user_num == MAX_USERS;
 }
 
 struct session* find_session(const char* session_id) {
-  for (size_t i = 0; i < MAX_SESSION; i++) {
+  for (size_t i = 0; i < MAX_SESSIONS; i++) {
     if (sessions[i] != NULL &&
         (strcmp(sessions[i]->session_id, session_id) == 0)) {
       return sessions[i]; // true
@@ -49,7 +44,7 @@ struct session* find_session(const char* session_id) {
 }
 
 int session_send(struct session* s, const char* source, const char* msg) {
-  for (size_t i = 0; i < MAX_USER_SESSION; ++i) {
+  for (size_t i = 0; i < MAX_USERS; ++i) {
     if (s->users[i] != NULL) {
       send_through(s->users[i]->sockfd, MESSAGE, source, s->session_id, msg);
     }
@@ -58,35 +53,23 @@ int session_send(struct session* s, const char* source, const char* msg) {
 }
 
 int session_remove_user(struct session* s, struct user* user) {
-  int err = 0;
-  assert(user->joined_sessions[s->sid] == s);
-  for (size_t i = 0; i < MAX_USER_SESSION; i++) {
+  for (size_t i = 0; i < MAX_USERS; i++) {
     if (s->users[i] == user) {
       s->users[i] = NULL;
       s->user_num--;
-      if (s->user_num == 0) {
-        // Destory session when there are no user in it
-        err = session_destory(s);
+      if (s->user_num == 0) { // Check if there are no users left in the session
+        // Destory session
+        sessions[s->sid] = NULL;
+        free(s);
+        return 0;
       }
-      return err;
     }
   }
   return 1;
 }
 
-int session_destory(struct session* s) {
-  if (s->user_num != 0) {
-    printf("Illegal deletion of session that has more than one user\n");
-    return 1; // TODO user will be able to delete session
-  } // illegal destory when there are user in the session
-  assert(sessions[s->sid] != NULL);
-  sessions[s->sid] = NULL;
-  free(s);
-  return 0;
-}
-
 int session_add_user(struct session* s, struct user* user) {
-  for (size_t i = 0; i < MAX_USER_SESSION; i++) {
+  for (size_t i = 0; i < MAX_USERS; i++) {
     if (s->users[i] == NULL) {
       s->users[i] = user;
       s->user_num++;
@@ -97,16 +80,17 @@ int session_add_user(struct session* s, struct user* user) {
 }
 
 int get_session_info(struct session* s, char* dest) {
-  assert(s != NULL);
-  if (dest == NULL) return 1;
-  snprintf(dest, MAX_DATA, "%d. %s [%d/%d] created by %s\n", s->sid + 1, s->session_id, s->user_num, MAX_USER_SESSION, s->creator->name);
+  if (dest == NULL){
+     return 1;
+  }
+  snprintf(dest, MAX_DATA, "%d. %s, users in session: %d\n", s->sid + 1, s->session_id, s->user_num);
   return 0;
 }
 
-int get_all_session_info(char* dest) {
+int list_sessions(char* dest) {
   size_t cur_pos = 0;
   char buf[MAX_DATA];
-  for (size_t i = 0; i < MAX_SESSION; i++) {
+  for (size_t i = 0; i < MAX_SESSIONS; i++) {
     if (sessions[i] != NULL) {
       get_session_info(sessions[i], buf);
       strncpy(dest + cur_pos, buf, MAX_DATA);

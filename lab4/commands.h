@@ -16,8 +16,7 @@ int isloggedin();
 int request(message_t type, const char* source, const char* session_id, const char* data);
 int recv_ack(message_t ack_type, message_t nak_type, int* retval, char** body);
 
-// menu
-int menu();
+
 // menu options
 int login(const char* name, const char* pass, const char* server_ip, const char* server_port);
 int logout();
