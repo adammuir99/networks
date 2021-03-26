@@ -9,7 +9,7 @@
 
 struct user;
 extern struct user* cur_user;
-extern int client_sock;
+extern int clientSockFd;
 
 //helper functions
 int isloggedin();
