@@ -254,7 +254,7 @@ int quit() {
     printf("failed to quit\n");
     return err;
   }
-  printf("\nQuiting Text Conferencing Pro v1.0\n");
+  printf("\nQuiting\n");
   exit(0);
 }
 

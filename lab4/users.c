@@ -105,7 +105,7 @@ int user_join_session(struct user* user, struct session* s) {
     return 1;
   }
   if (session_is_full(s)) {
-    sprintf(msg, "%s:session already full %d", s->session_id, MAX_USER_SESSION);
+    sprintf(msg, "%s:session already full %d", s->session_id, MAX_USERS);
     response(user->sockfd, JN_NAK, msg);
     return 1;
   }

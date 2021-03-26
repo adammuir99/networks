@@ -134,7 +134,7 @@ int main(int argc, char const * argv[]) {
             break;
           case QUERY: {
             char msg[MAX_DATA];
-            get_all_session_info(msg);
+            list_sessions(msg);
             response(cur_user->sockfd, QU_ACK, msg);
           }
             break;
