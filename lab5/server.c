@@ -140,7 +140,25 @@ int main(int argc, char const * argv[]) {
           case MESSAGE:
             user_send_msg(cur_user, find_session(m.session_id), m.data);
             break;
+          case KICK:
+            for(struct user* iter = find_session(m.session_id)->users; iter != NULL; iter++){
+              if (iter->name == m.data){
+                user_leave_session(iter, find_session(m.session_id), 1);
+                break;
+              }
+            }
+          case ADMIN:{
+            //printf("ADMIN HERE\n");
+            struct session* s = find_session(m.session_id);
+
+            if (s == NULL) {
+              send_to_server(cur_user->sockfd, ADMIN_NACK, "Server", "Server", " ");
+              break;
+            }
+            check_admin(s, cur_user);
+            break;
           }
+         }
         } // if
       } // for loop
     }
