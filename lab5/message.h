@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#define MAX_SESSION_ID 32
+#define MAX_SESSION_ID 1080
 #define MAX_NAME 256
 #define MAX_DATA 2048
 
@@ -33,8 +33,15 @@ struct message {
 #define MESSAGE 11
 #define LIST 12
 #define QU_ACK 13
+
 #define INVITEOTHER 18
 #define INVITE_ACK 19
+
+#define KICK 14
+#define ADMIN 15
+#define ADMIN_ACK 16
+#define ADMIN_NACK 17
+
 
 int buf_to_message(const char* buf, struct message* m);
 

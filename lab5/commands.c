@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #include "users.h"
 #include "message.h"
@@ -58,6 +59,16 @@ int menu() {
       scanf(" %s", session_id);
       err = leave_session(session_id);
     }
+  } else if (strcmp(command, "/kick") == 0) {
+    	
+	if(!isloggedin()){ printf("Not yet logged in; Please login first\n"); }      
+	else {
+          char name[MAX_NAME];
+          scanf(" %s", name);
+      		scanf(" %s", session_id);
+      		err = kick_session(session_id, name);
+    	}
+
   } else if (strcmp(command, "/createsession") == 0) {
     LOGIN_CHECK {
       scanf(" %s", session_id);
@@ -205,6 +216,30 @@ int leave_session(const char* session_id) {
   if (strcmp(cur_session, session_id) == 0) {
     in_session = 0;
   }
+  return 0;
+}
+
+int kick_session(const char* session_id, const char* name) {
+  request(ADMIN, cur_user->name, session_id, cur_user->name);
+  int isack;
+  char* result = NULL;
+  recv_ack(ADMIN_ACK, ADMIN_NACK, &isack, &result);
+  if (isack == 0){  // NACK means the user is not an admin
+    printf("Only an admin can kick, make sure you enter a valid name and session\n");
+    return 0;
+  }
+
+  char text[256];
+  char text2[256];
+  strcpy(text, name);
+  strcat(text, " has been kicked from ");
+  strcat(text, session_id);
+  request(MESSAGE, "Server", cur_session, text);
+  strcpy(text2, name);
+  strcat(text2, "1");
+  sleep(1);
+  request(MESSAGE, "Server", cur_session, text2);
+  request(KICK, "Server", session_id, name);
   return 0;
 }
 

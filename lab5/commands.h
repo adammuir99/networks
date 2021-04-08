@@ -27,6 +27,11 @@ int create_session(const char* session_id);
 int list();
 int quit();
 int send_message(const char* text);
+
 int invite(const char* user, const char* sessionID);
+
+//lab5
+int kick_session(const char* session_id, const char* name);
+
 
 #endif
