@@ -33,6 +33,8 @@ struct message {
 #define MESSAGE 11
 #define LIST 12
 #define QU_ACK 13
+#define INVITEOTHER 18
+#define INVITE_ACK 19
 
 int buf_to_message(const char* buf, struct message* m);
 

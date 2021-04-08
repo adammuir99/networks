@@ -140,6 +140,9 @@ int main(int argc, char const * argv[]) {
           case MESSAGE:
             user_send_msg(cur_user, find_session(m.session_id), m.data);
             break;
+	  case INVITEOTHER:
+	    user_invite(cur_user, find_user(m.data), find_session(m.session_id));
+	    break;
           }
         } // if
       } // for loop

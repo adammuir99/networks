@@ -34,6 +34,22 @@ int main(int argc, char *argv[]) {
       buf[MAX_MESSAGE - 1] = '\0'; // Avoid overflow
       struct message m;
       buf_to_message(buf, &m);
+      if(m.type == INVITEOTHER){
+	char answer[MAX_DATA];
+	printf("Server: %s has invited you to join session %s\n", m.source, m.session_id);
+	while(1) {
+		printf("Would you like to join the session? Please answer: yes or no \n");
+		scanf("%s",answer);
+		if(strncmp(answer, "yes", 1) == 0 ) {
+			join_session(m.session_id);
+			break;
+		} else if( strncmp(answer, "no", 1) == 0) {
+			break;
+		} else {
+			printf("Invalid answer!\n");
+		}
+	}
+      }
       print_message(&m);
     } else if (FD_ISSET(fileno(stdin), &fds)) {
       menu();

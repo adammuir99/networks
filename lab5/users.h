@@ -26,5 +26,6 @@ int user_leave_session(struct user* user, struct session* s, int do_ack);
 int user_send_msg(struct user* user, struct session* s, const char* msg);
 struct user* find_user(const char* username);
 void join_helper(struct user* user, struct session* s);
+int user_invite(struct user * user1, struct user* user2, struct session* s);
 
 #endif

@@ -69,6 +69,12 @@ int menu() {
     }
   } else if (strcmp(command, "/quit") == 0) {
     err = quit();
+  } else if(strcmp(command,"/invite")== 0) {
+	LOGIN_CHECK{
+		scanf(" %s ", username);
+		scanf(" %s", session_id);
+		err = invite(username,session_id);
+	}
   } else {
     LOGIN_CHECK {
       // get all text in terminl and send
@@ -252,4 +258,24 @@ int send_message(const char* text) {
   if (err) return err;
   printf("message sent...\n");
   return 0;
+}
+
+int invite(const char* user, const char* sessionID){
+
+	int code = request(INVITEOTHER, cur_user->name, sessionID, user);
+	if(code){ return code;}
+	int ack;
+
+	char* result = NULL;
+
+	code = recv_ack(INVITE_ACK, UNKNOWN, &ack, &result);
+
+	if(code) {
+		printf("Failed to invite %s: %s\n", user, result);
+	} else {
+		printf("%s\n", result);
+	}
+
+	free(result);
+	return code;
 }

@@ -171,3 +171,26 @@ struct user* find_user(const char* username) {
   }
   return NULL;
 }
+
+int user_invite(struct user* user1, struct user* user2, struct session* s){
+
+	if(s == NULL){
+		send_to_server(user1->sockfd, UNKNOWN, "Server", "Server", "Invalid session! Session doesn't exist.");
+		return 1;
+	}
+
+	if(user2 == NULL){
+		send_to_server(user1->sockfd, UNKNOWN, "Server", "Server", "Invalid user! User doesn't exist. ");
+		return 1;
+	}
+
+	if(!user2->active){
+		send_to_server(user1->sockfd, UNKNOWN, "Server", "Server", "Invalid user! User not online. ");
+		return 1;
+	}
+
+	int code = 0;
+	code = send_to_server(user1->sockfd, INVITE_ACK, "Server", "Server", "Invitation sent!");
+	code = code || send_to_server(user2->sockfd, INVITEOTHER, user1->name, s->session_id, "");
+	return code;
+}
