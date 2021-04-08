@@ -19,82 +19,21 @@ struct user* cur_user = NULL; // current user
 // whether user in a session
 int is_in_session = 0;
 char cur_session[MAX_SESSION_ID];
-int client_sock = -1; // current socket
+int clientSockFd = -5; // client socket file descriptor, intialize to -5 (arbitrary) because not aquired yet
 
-#define LOGIN_CHECK                                             \
-  if(!isloggedin())                                             \
-    { printf("Not yet logged in; Please login first\n"); }      \
-  else
-
-int menu() {
-
-  int err = 0;
-  char session_id[MAX_FIELD];
-  char username[MAX_FIELD];
-  char command[MAX_COMMAND_LEN];
-  scanf("%s", command);
-
-  if (strcmp(command, "/login") == 0) {
-    if (!isloggedin()) {
-      char name[MAX_NAME];
-      char pass[MAX_PASS];
-      char server_ip[MAX_FIELD];
-      char server_port[MAX_FIELD];
-      scanf(" %s %s %s %s", name, pass, server_ip, server_port);
-      err = login(name, pass, server_ip, server_port);
-    } else {
-      printf("Already logged in as %s\n", cur_user->name);
-    }
-  } else if (strcmp(command, "/logout") == 0) {
-    LOGIN_CHECK {
-      err = logout();
-    }
-  } else if (strcmp(command, "/joinsession") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", session_id);
-      err = join_session(session_id);
-    }
-  } else if (strcmp(command, "/leavesession") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", session_id);
-      err = leave_session(session_id);
-    }
-  } else if (strcmp(command, "/createsession") == 0) {
-    LOGIN_CHECK {
-      scanf(" %s", session_id);
-      err = create_session(session_id);
-    }
-  } else if (strcmp(command, "/list") == 0) {
-    LOGIN_CHECK{
-      err = list();
-    }
-  } else if (strcmp(command, "/quit") == 0) {
-    err = quit();
-  } else {
-    LOGIN_CHECK {
-      // get all text in terminl and send
-      char msg_buf[MAX_DATA];
-      strcpy(msg_buf, command);
-      int offset = strlen(command);
-      fgets(msg_buf + offset, MAX_DATA - offset, stdin);
-      err = send_message(msg_buf);
-    }
-  }
-  return err;
-}
 
 int isloggedin() {
   return cur_user != NULL;
 }
 
 int request(message_t type, const char* source, const char* session_id, const char* data) {
-  return send_through(client_sock, type, source, session_id, data);
+  return send_through(clientSockFd, type, source, session_id, data);
 }
 
 // Remember to free body since it's malloced
 int recv_ack(message_t ack_type, message_t nak_type, int* retval, char** body) {
   char msg_buf[sizeof(struct message)];
-  int err = recv(client_sock, msg_buf, sizeof(struct message), 0);
+  int err = recv(clientSockFd, msg_buf, sizeof(struct message), 0);
   if (err == -1) {
     printf("Failed receiving ack/nak!...\n");
     return 1;
@@ -129,13 +68,13 @@ int login(const char* name, const char* pass, const char* server_ip, const char*
   }
   // loop through all the results and connect to the first we can
   for(p = servinfo; p != NULL; p = p->ai_next) {
-    if ((client_sock = socket(p->ai_family, p->ai_socktype,
+    if ((clientSockFd = socket(p->ai_family, p->ai_socktype,
                               p->ai_protocol)) == -1) {
       perror("client: socket");
       continue;
     }
-    if (connect(client_sock, p->ai_addr, p->ai_addrlen) == -1) {
-      close(client_sock);
+    if (connect(clientSockFd, p->ai_addr, p->ai_addrlen) == -1) {
+      close(clientSockFd);
       perror("client: connect");
       continue;
     }
@@ -166,8 +105,8 @@ int login(const char* name, const char* pass, const char* server_ip, const char*
 
 int logout() {
   int err = request(EXIT, cur_user->name, "", "");
-  close(client_sock);
-  client_sock = -1;
+  close(clientSockFd);
+  clientSockFd = -5;
   if (err) {
     printf("Failed to logout\n");
   } else {
